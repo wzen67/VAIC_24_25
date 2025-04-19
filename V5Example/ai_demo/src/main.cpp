@@ -42,7 +42,7 @@ ai::jetson  jetson_comms;
 // The Demo is symetrical, we send the same data and display the same status on both
 // manager and worker robots
 // Comment out the following definition to build for the worker robot
-#define  MANAGER_ROBOT    1
+// #define  MANAGER_ROBOT    1
 
 #if defined(MANAGER_ROBOT)
 #pragma message("building for the manager")
