@@ -131,45 +131,57 @@ void autonomousMain(void) {
   firstAutoFlag = false;
 }
 
-int main() {
 
+int main() {
   // local storage for latest data from the Jetson Nano
   static AI_RECORD local_map;
 
   // Run at about 15Hz
   int32_t loop_time = 33;
 
-  // start the status update display
+  // Setup debug screen
+  Brain.Screen.clearScreen();
+  Brain.Screen.setCursor(1, 1);
+  Brain.Screen.print("Starting main()...");
+
+  // Start the status update display (Jetson + VEXlink dashboard)
+  Brain.Screen.newLine(); Brain.Screen.print("Starting dashboard...");
   thread t1(dashboardTask);
 
-  // Set up callbacks for autonomous and driver control periods.
+  // Setup autonomous callback
+  Brain.Screen.newLine(); Brain.Screen.print("Setting up Competition mode...");
   Competition.autonomous(autonomousMain);
 
-  // print through the controller to the terminal (vexos 1.0.12 is needed)
-  // As USB is tied up with Jetson communications we cannot use
-  // printf for debug.  If the controller is connected
-  // then this can be used as a direct connection to USB on the controller
-  // when using VEXcode.
-  //
-  //FILE *fp = fopen("/dev/serial2","wb");
   this_thread::sleep_for(loop_time);
-
   Arm.setVelocity(60, percent);
+  Brain.Screen.newLine(); Brain.Screen.print("Entering main loop...");
 
   while(1) {
-      // get last map data
-      jetson_comms.get_data( &local_map );
+    // Get last map data from Jetson
+    jetson_comms.get_data(&local_map);
 
-      // set our location to be sent to partner robot
-      link.set_remote_location( local_map.pos.x, local_map.pos.y, local_map.pos.az, local_map.pos.status );
+    // Print detection count
+    Brain.Screen.setCursor(7, 1);  // Fixed position to overwrite same line
+    Brain.Screen.print("Detections: %d     ", local_map.detectionCount);
 
-      // fprintf(fp, "%.2f %.2f %.2f\n", local_map.pos.x, local_map.pos.y, local_map.pos.az)
+    // Print first detected object info if available
+    if (local_map.detectionCount > 0) {
+      DETECTION_OBJECT &obj = local_map.detections[0];
+      Brain.Screen.setCursor(8, 1);
+      Brain.Screen.print("ClassID: %d Prob: %.2f", obj.classID, obj.probability);
+    }
 
-      // request new data    
-      // NOTE: This request should only happen in a single task.    
-      jetson_comms.request_map();
+    // Set location to send to partner robot
+    link.set_remote_location(local_map.pos.x, local_map.pos.y, local_map.pos.az, local_map.pos.status);
 
-      // Allow other tasks to run
-      this_thread::sleep_for(loop_time);
+    // Request new map data
+    jetson_comms.request_map();
+
+    // Wait for next loop
+    this_thread::sleep_for(loop_time);
   }
+
+  
+  // TEMPORARY: force autonomous run //debug only
+  // auto_Isolation(); 
 }
