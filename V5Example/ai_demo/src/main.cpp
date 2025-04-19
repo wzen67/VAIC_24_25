@@ -101,6 +101,15 @@ void auto_Isolation(void) {
 
 void auto_Interaction(void) {
   // Add functions for interaction phase
+
+  Brain.Screen.clearScreen();
+  Brain.Screen.setCursor(1, 1);
+  Brain.Screen.print("== Running auto_Interaction ==");
+
+  // You can add actions later
+  Brain.Screen.newLine(); Brain.Screen.print("No interaction logic yet.");
+
+  Brain.Screen.newLine(); Brain.Screen.print("== auto_Interaction Done ==");
 }
 
 
@@ -122,14 +131,20 @@ void autonomousMain(void) {
   // When the field goes enabled for the second time this task will start again
   // and we will enter the interaction period. 
   // ..........................................................................
-
-  if(firstAutoFlag)
+  printf(">>> Entered autonomousMain()\n");
+  
+  if (firstAutoFlag) {
+    printf("Running auto_Isolation() because firstAutoFlag is true\n");
     auto_Isolation();
-  else 
+  } else {
+    printf("Running auto_Interaction() because firstAutoFlag is false\n");
     auto_Interaction();
-
+  }
+  
   firstAutoFlag = false;
+  printf("firstAutoFlag set to false after running autonomous\n");
 }
+  
 
 
 int main() {
